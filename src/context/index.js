@@ -1,3 +1,3 @@
-﻿export { ThemeProvider, useTheme } from "./ThemeContext.jsx";
-export { AuthProvider, useAuth } from "./AuthContext.jsx";
-export { TimerProvider, useTimer } from "./TimerContext.jsx";
+﻿export { default as AuthContext } from './AuthContext';
+export { default as ThemeContext } from './ThemeContext';
+export { default as TimerContext } from './TimerContext';

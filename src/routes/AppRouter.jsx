@@ -1,6 +1,8 @@
-﻿import React from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from '../components/MainLayout';
+
+// Core Pages
 import Home from '../pages/Home';
 import BrowseCourses from '../pages/BrowseCourses';
 import Login from '../pages/Login';
@@ -13,23 +15,23 @@ import NotFound from '../pages/NotFound';
 import SettingsPage from '../pages/SettingsPage';
 import NotificationsPage from '../pages/NotificationsPage';
 
-// Import new pages
+// User Pages
 import MyCourses from '../pages/MyCourses';
 import Certificates from '../pages/Certificates';
 import LearningPath from '../pages/LearningPath';
 import Achievements from '../pages/Achievements';
 import StudyGroups from '../pages/StudyGroups';
+
+// Course Pages
 import CoursePlayerPage from '../pages/Course/CoursePlayerPage';
 import AssignmentPage from '../pages/Course/AssignmentPage';
 import CertificatePage from '../pages/Course/CertificatePage';
 import ResourcesPage from '../pages/Course/ResourcesPage';
+
+// Instructor Pages
 import InstructorDashboard from '../pages/Instructor/Dashboard';
 import CourseManagement from '../pages/Instructor/CourseManagement';
 import StudentAnalytics from '../pages/Instructor/StudentAnalytics';
-import CoursePlayerPage from '../pages/Course/CoursePlayerPage';
-import AssignmentPage from '../pages/Course/AssignmentPage';
-import MyCourses from '../pages/MyCourses';
-import LearningPath from '../pages/LearningPath';
 
 const AppRouter = () => {
   return (
@@ -40,6 +42,8 @@ const AppRouter = () => {
           <Route index element={<Home />} />
           <Route path="courses" element={<BrowseCourses />} />
           <Route path="course/:courseId" element={<CourseDetail />} />
+          
+          {/* Course Learning Pages */}
           <Route path="course/:courseId/learn" element={<CoursePlayerPage />} />
           <Route path="course/:courseId/assignment/:assignmentId" element={<AssignmentPage />} />
           <Route path="course/:courseId/certificate" element={<CertificatePage />} />
@@ -73,12 +77,7 @@ const AppRouter = () => {
           <Route path="about" element={<Navigate to="/" />} />
           <Route path="pricing" element={<Navigate to="/courses" />} />
           
-
-          <Route path="course/:courseId/learn" element={<CoursePlayerPage />} />
-          <Route path="course/:courseId/assignment/:assignmentId" element={<AssignmentPage />} />
-          <Route path="my-courses" element={<MyCourses />} />
-          <Route path="learning-path" element={<LearningPath />} />
-          {/* 404 */}
+          {/* 404 - MUST BE LAST */}
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
@@ -87,5 +86,3 @@ const AppRouter = () => {
 };
 
 export default AppRouter;
-
-

@@ -1,91 +1,159 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom'; // Only these imports
+import React, { useState, useEffect } from "react";
+import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 
 // Import MainLayout
-import MainLayout from '../components/MainLayout';
-import AdminLayout from '../components/admin/common/AdminLayout';
+import MainLayout from "../components/MainLayout";
+import AdminLayout from "../components/admin/common/AdminLayout";
 
 // Public pages
-import Home from '../pages/Home';
-import BrowseCourses from '../pages/BrowseCourses';
-import CourseDetail from '../pages/Course/CourseDetail';
-import Login from '../pages/Login';
-import Register from '../pages/Register';
-import NotFound from '../pages/NotFound';
-import Teacher from '../pages/Teacher';
-import About from '../pages/About';
+import Home from "../pages/Home";
+import BrowseCourses from "../pages/BrowseCourses";
+import CourseDetail from "../pages/Course/CourseDetail";
+import Login from "../pages/Login";
+import Register from "../pages/Register";
+import NotFound from "../pages/NotFound";
+import Teacher from "../pages/Teacher";
+import About from "../pages/About";
 
 // Protected pages (require authentication)
-import Dashboard from '../pages/Dashboard/Dashboard';
-import MyCourses from '../pages/MyCourses';
-import CoursePlayerPage from '../pages/Course/CoursePlayerPage';
-import LearningPath from '../pages/LearningPath';
-import Certificates from '../pages/Certificates';
-import NotificationsPage from '../pages/NotificationsPage';
-import SettingsPage from '../pages/SettingsPage';
-import StudyGroups from '../pages/StudyGroups';
+import Dashboard from "../pages/Dashboard/Dashboard";
+import MyCourses from "../pages/MyCourses";
+import CoursePlayerPage from "../pages/Course/CoursePlayerPage";
+import LearningPath from "../pages/LearningPath";
+import Certificates from "../pages/Certificates";
+import NotificationsPage from "../pages/NotificationsPage";
+import SettingsPage from "../pages/SettingsPage";
+import StudyGroups from "../pages/StudyGroups";
 
 // Instructor pages
-import InstructorDashboard from '../pages/Instructor/Dashboard';
-import CourseManagement from '../pages/Instructor/CourseManagement';
-import StudentAnalytics from '../pages/Instructor/StudentAnalytics';
-import RevenueAnalytics from '../pages/Instructor/RevenueAnalytics';
-import ContentLibrary from '../pages/Instructor/ContentLibrary';
+import InstructorDashboard from "../pages/Instructor/Dashboard";
+import CourseManagement from "../pages/Instructor/CourseManagement";
+import StudentAnalytics from "../pages/Instructor/StudentAnalytics";
+import RevenueAnalytics from "../pages/Instructor/RevenueAnalytics";
+import ContentLibrary from "../pages/Instructor/ContentLibrary";
 
 // Admin pages
-import AdminDashboard from '../pages/admin/Dashboard';
-import UserManagement from '../pages/admin/Users/index';
-import CourseApproval from '../pages/admin/Courses/Approvals';
-import SystemSettings from '../pages/admin/Settings/System';
+import AdminDashboard from "../pages/admin/Dashboard";
+import UserManagement from "../pages/admin/Users/index";
+import CourseApproval from "../pages/admin/Courses/Approvals";
+import SystemSettings from "../pages/admin/Settings/System";
 
 // Course pages
-import AssignmentPage from '../pages/Course/AssignmentPage';
-import CertificatePage from '../pages/Course/CertificatePage';
-import ResourcesPage from '../pages/Course/ResourcesPage';
+import AssignmentPage from "../pages/Course/AssignmentPage";
+import CertificatePage from "../pages/Course/CertificatePage";
+import ResourcesPage from "../pages/Course/ResourcesPage";
 
-// Simple auth check - reads from localStorage directly
-const isAuthenticated = () => {
-  const user = localStorage.getItem('user');
-  if (!user) return false;
-  
-  try {
-    const userData = JSON.parse(user);
-    return !!userData; // Return true if user exists (any role)
-  } catch {
-    return false;
-  }
-};
+// Loader component for auth check
+const AuthLoader = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+  </div>
+);
 
-// Check if user has specific role
-const hasRole = (requiredRoles) => {
-  const user = localStorage.getItem('user');
-  if (!user) return false;
-  
-  try {
-    const userData = JSON.parse(user);
-    return requiredRoles.includes(userData.role);
-  } catch {
-    return false;
-  }
-};
-
-// Protected Route component - for any authenticated user
+// Protected Route component with API verification
 const ProtectedRoute = ({ children, roles = [] }) => {
-  if (!isAuthenticated()) {
-    return <Navigate to="/login" replace />;
+  const [authState, setAuthState] = useState({ 
+    isAuthenticated: false, 
+    user: null, 
+    isLoading: true 
+  });
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const verifyAuth = async () => {
+      const token = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+      
+      if (!token || !storedUser) {
+        setAuthState({ isAuthenticated: false, user: null, isLoading: false });
+        navigate('/login', { 
+          state: { from: location.pathname },
+          replace: true 
+        });
+        return;
+      }
+
+      try {
+        // Import api dynamically
+        const { authAPI } = await import('../services/api');
+        const response = await authAPI.getMe();
+        
+        if (response.success && response.user.id === JSON.parse(storedUser).id) {
+          setAuthState({ 
+            isAuthenticated: true, 
+            user: response.user, 
+            isLoading: false 
+          });
+        } else {
+          throw new Error('Invalid user data');
+        }
+      } catch (error) {
+        console.error('Auth verification failed:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setAuthState({ isAuthenticated: false, user: null, isLoading: false });
+        navigate('/login', { 
+          state: { from: location.pathname },
+          replace: true 
+        });
+      }
+    };
+
+    verifyAuth();
+  }, [location.pathname, navigate]);
+
+  // Show loading state
+  if (authState.isLoading) {
+    return <AuthLoader />;
   }
-  
+
+  // If not authenticated, nothing will render (already redirected)
+  if (!authState.isAuthenticated) {
+    return null;
+  }
+
   // Check roles if specified
-  if (roles.length > 0 && !hasRole(roles)) {
-    return <Navigate to="/" replace />;
+  if (roles.length > 0 && !roles.includes(authState.user.role)) {
+    // Redirect to appropriate dashboard based on role
+    switch(authState.user.role) {
+      case 'admin':
+        navigate('/admin/dashboard', { replace: true });
+        break;
+      case 'instructor':
+        navigate('/instructor/dashboard', { replace: true });
+        break;
+      default:
+        navigate('/dashboard', { replace: true });
+    }
+    return null;
   }
-  
+
   return children;
 };
 
+// Quick auth check for conditional rendering
+const useAuth = () => {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error('Failed to parse user:', error);
+      }
+    }
+  }, []);
+
+  return { user };
+};
+
 const AppRouter = () => {
+  const { user } = useAuth();
+  
   return (
-    // REMOVE <Router> - just use <Routes>
     <Routes>
       {/* Main Layout Routes (with Header/Footer) */}
       <Route element={<MainLayout />}>
@@ -99,11 +167,11 @@ const AppRouter = () => {
         <Route path="/about" element={<About />} />
         <Route path="/free-trial" element={<Home />} />
 
-        {/* Student Routes */}
+        {/* Student/User Routes */}
         <Route
           path="/dashboard"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute roles={['user']}>
               <Dashboard />
             </ProtectedRoute>
           }
@@ -111,7 +179,7 @@ const AppRouter = () => {
         <Route
           path="/my-courses"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute roles={['user']}>
               <MyCourses />
             </ProtectedRoute>
           }
@@ -119,7 +187,7 @@ const AppRouter = () => {
         <Route
           path="/learn/:courseId"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute roles={['user']}>
               <CoursePlayerPage />
             </ProtectedRoute>
           }
@@ -127,7 +195,7 @@ const AppRouter = () => {
         <Route
           path="/learning-paths"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute roles={['user']}>
               <LearningPath />
             </ProtectedRoute>
           }
@@ -135,7 +203,7 @@ const AppRouter = () => {
         <Route
           path="/certificates"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute roles={['user']}>
               <Certificates />
             </ProtectedRoute>
           }
@@ -143,7 +211,7 @@ const AppRouter = () => {
         <Route
           path="/notifications"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute roles={['user']}>
               <NotificationsPage />
             </ProtectedRoute>
           }
@@ -151,7 +219,7 @@ const AppRouter = () => {
         <Route
           path="/settings"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute roles={['user']}>
               <SettingsPage />
             </ProtectedRoute>
           }
@@ -159,7 +227,7 @@ const AppRouter = () => {
         <Route
           path="/study-groups"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute roles={['user']}>
               <StudyGroups />
             </ProtectedRoute>
           }
@@ -169,7 +237,7 @@ const AppRouter = () => {
         <Route
           path="/course/:courseId/assignment/:assignmentId"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute roles={['user']}>
               <AssignmentPage />
             </ProtectedRoute>
           }
@@ -177,7 +245,7 @@ const AppRouter = () => {
         <Route
           path="/course/:courseId/certificate"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute roles={['user']}>
               <CertificatePage />
             </ProtectedRoute>
           }
@@ -185,7 +253,7 @@ const AppRouter = () => {
         <Route
           path="/course/:courseId/resources"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute roles={['user']}>
               <ResourcesPage />
             </ProtectedRoute>
           }
@@ -197,7 +265,7 @@ const AppRouter = () => {
         <Route
           path="/instructor/dashboard"
           element={
-            <ProtectedRoute roles={['instructor', 'admin']}>
+            <ProtectedRoute roles={['instructor']}>
               <InstructorDashboard />
             </ProtectedRoute>
           }
@@ -205,7 +273,7 @@ const AppRouter = () => {
         <Route
           path="/instructor/courses"
           element={
-            <ProtectedRoute roles={['instructor', 'admin']}>
+            <ProtectedRoute roles={['instructor']}>
               <CourseManagement />
             </ProtectedRoute>
           }
@@ -213,7 +281,7 @@ const AppRouter = () => {
         <Route
           path="/instructor/students"
           element={
-            <ProtectedRoute roles={['instructor', 'admin']}>
+            <ProtectedRoute roles={['instructor']}>
               <StudentAnalytics />
             </ProtectedRoute>
           }
@@ -221,7 +289,7 @@ const AppRouter = () => {
         <Route
           path="/instructor/revenue"
           element={
-            <ProtectedRoute roles={['instructor', 'admin']}>
+            <ProtectedRoute roles={['instructor']}>
               <RevenueAnalytics />
             </ProtectedRoute>
           }
@@ -229,7 +297,7 @@ const AppRouter = () => {
         <Route
           path="/instructor/content"
           element={
-            <ProtectedRoute roles={['instructor', 'admin']}>
+            <ProtectedRoute roles={['instructor']}>
               <ContentLibrary />
             </ProtectedRoute>
           }

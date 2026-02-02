@@ -1,3 +1,14 @@
+#!/bin/bash
+
+echo "🔧 Fixing backend dependencies..."
+
+cd /home/abdihope/AE-Platform/backend
+
+# Backup package.json
+cp package.json package.json.backup
+
+# Create/update package.json with all required dependencies
+cat > package.json << 'PKGEOF'
 {
   "name": "ae-platform-backend",
   "version": "1.0.0",
@@ -28,3 +39,10 @@
     "nodemon": "^3.0.1"
   }
 }
+PKGEOF
+
+echo "Installing dependencies..."
+npm install
+
+echo "✅ Dependencies installed. Starting backend..."
+npm run dev

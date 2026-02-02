@@ -1,0 +1,51 @@
+import React from 'react';
+import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
+import { CartProvider } from './context/CartContext';
+import { EnrollmentProvider } from './context/EnrollmentContext';
+import { ProgressProvider } from './context/ProgressContext';
+import { WishlistProvider } from './context/WishlistContext';
+import { NotesProvider } from './context/NotesContext';
+import { PlayerProvider } from './context/PlayerContext';
+import { LearningProvider } from './context/LearningContext';
+import { TimerProvider } from './context/TimerContext';
+
+import Header from './components/Header';
+import Footer from './components/Footer';
+import AppRouter from './routes/AppRouter';
+
+function App() {
+  return (
+    <Router>
+      <ThemeProvider>
+        <AuthProvider>
+          <TimerProvider>
+            <CartProvider>
+              <EnrollmentProvider>
+                <ProgressProvider>
+                  <WishlistProvider>
+                    <NotesProvider>
+                      <PlayerProvider>
+                        <LearningProvider>
+                          <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+                            <Header />
+                            <main className="flex-grow">
+                              <AppRouter />
+                            </main>
+                            <Footer />
+                          </div>
+                        </LearningProvider>
+                      </PlayerProvider>
+                    </NotesProvider>
+                  </WishlistProvider>
+                </ProgressProvider>
+              </EnrollmentProvider>
+            </CartProvider>
+          </TimerProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </Router>
+  );
+}
+
+export default App;

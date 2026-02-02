@@ -1,0 +1,251 @@
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+
+// Public pages
+import Home from '../pages/Home';
+import BrowseCourses from '../pages/BrowseCourses';
+import CourseDetail from '../pages/Course/CourseDetail';
+import Login from '../pages/Login';
+import Register from '../pages/Register';
+import NotFound from '../pages/NotFound';
+import Teacher from '../pages/Teacher';
+import About from '../pages/About'; // Add this import
+
+// Protected pages (require authentication)
+import Dashboard from '../pages/Dashboard/Dashboard';
+import MyCourses from '../pages/MyCourses';
+import CoursePlayerPage from '../pages/Course/CoursePlayerPage';
+import LearningPath from '../pages/LearningPath';
+import Certificates from '../pages/Certificates';
+import NotificationsPage from '../pages/NotificationsPage';
+import SettingsPage from '../pages/SettingsPage';
+import StudyGroups from '../pages/StudyGroups';
+
+// Instructor pages
+import InstructorDashboard from '../pages/Instructor/Dashboard';
+import CourseManagement from '../pages/Instructor/CourseManagement';
+import StudentAnalytics from '../pages/Instructor/StudentAnalytics';
+import RevenueAnalytics from '../pages/Instructor/RevenueAnalytics';
+import ContentLibrary from '../pages/Instructor/ContentLibrary';
+
+// Admin pages
+import AdminDashboard from '../pages/admin/Dashboard';
+import UserManagement from ../pages/admin/Users/index';
+import CourseApproval from ../pages/admin/Courses/Approvals';
+import SystemSettings from ../pages/admin/Settings/System';
+
+// Course pages
+import AssignmentPage from '../pages/Course/AssignmentPage';
+import CertificatePage from '../pages/Course/CertificatePage';
+import ResourcesPage from '../pages/Course/ResourcesPage';
+
+// Component for protected routes
+const ProtectedRoute = ({ children, roles = [] }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Check roles if specified
+  if (roles.length > 0 && !roles.includes(user.role)) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+};
+
+const AppRouter = () => {
+  return (
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/" element={<Home />} />
+      <Route path="/courses" element={<BrowseCourses />} />
+      <Route path="/course/:courseId" element={<CourseDetail />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/teachers" element={<Teacher />} />
+      <Route path="/about" element={<About />} /> {/* Add this route */}
+      <Route path="/free-trial" element={<Home />} /> {/* You can create a specific FreeTrial page */}
+
+      {/* Student Routes */}
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/my-courses"
+        element={
+          <ProtectedRoute>
+            <MyCourses />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/learn/:courseId"
+        element={
+          <ProtectedRoute>
+            <CoursePlayerPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/learning-paths"
+        element={
+          <ProtectedRoute>
+            <LearningPath />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/certificates"
+        element={
+          <ProtectedRoute>
+            <Certificates />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/notifications"
+        element={
+          <ProtectedRoute>
+            <NotificationsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <SettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/study-groups"
+        element={
+          <ProtectedRoute>
+            <StudyGroups />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Course Sub-routes */}
+      <Route
+        path="/course/:courseId/assignment/:assignmentId"
+        element={
+          <ProtectedRoute>
+            <AssignmentPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/course/:courseId/certificate"
+        element={
+          <ProtectedRoute>
+            <CertificatePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/course/:courseId/resources"
+        element={
+          <ProtectedRoute>
+            <ResourcesPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Instructor Routes */}
+      <Route
+        path="/instructor/dashboard"
+        element={
+          <ProtectedRoute roles={['instructor', 'admin']}>
+            <InstructorDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/instructor/courses"
+        element={
+          <ProtectedRoute roles={['instructor', 'admin']}>
+            <CourseManagement />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/instructor/students"
+        element={
+          <ProtectedRoute roles={['instructor', 'admin']}>
+            <StudentAnalytics />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/instructor/revenue"
+        element={
+          <ProtectedRoute roles={['instructor', 'admin']}>
+            <RevenueAnalytics />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/instructor/content"
+        element={
+          <ProtectedRoute roles={['instructor', 'admin']}>
+            <ContentLibrary />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Admin Routes */}
+      <Route
+        path="/admin/dashboard"
+        element={
+          <ProtectedRoute roles={['admin']}>
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <ProtectedRoute roles={['admin']}>
+            <UserManagement />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/courses"
+        element={
+          <ProtectedRoute roles={['admin']}>
+            <CourseApproval />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/settings"
+        element={
+          <ProtectedRoute roles={['admin']}>
+            <SystemSettings />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="/teachers" element={<Teacher />} />
+
+      {/* 404 Route */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
+
+export default AppRouter;

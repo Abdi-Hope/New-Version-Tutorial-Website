@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Your custom styles go here */
+:root {
+  --primary-color: #3b82f6;
+}
+
+/* Use @apply inside CSS rules */
+.my-custom-class {
+  @apply bg-blue-500 text-white p-4 rounded-lg;
+}
+
+/* Or use @layer for better organization */
+@layer components {
+  .btn-custom {
+    @apply bg-gradient-to-r from-blue-500 to-purple-600 
+           text-white font-semibold py-2 px-4 rounded-lg 
+           hover:opacity-90 transition-opacity;
+  }
+}
+
+@layer base {
+  body {
+    @apply antialiased text-gray-900 bg-gray-50;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold text-gray-900;
+  }
+}
+
+@layer utilities {
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+}
